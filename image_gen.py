@@ -3,9 +3,7 @@ import glob
 import random
 from PIL import Image, ImageDraw, ImageFont
 
-# Deterministic execution enforced for reproducibility
-random.seed(42)
-
+# Deterministic execution pathing
 try:
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 except NameError:
@@ -13,28 +11,18 @@ except NameError:
 
 TARGET_DIRECTORY = os.path.join(SCRIPT_DIR, "stimuli")
 
-def get_next_available_filename(target_folder, prefix, extension=".png"):
-    """Tracks existing files with the dynamically selected prefix."""
+def get_next_available_filename(target_folder, prefix, flip_suffix, extension=".png"):
+    """
+    Constructs the filename with the specific flip suffix.
+    Note: We do not use 'highest index' tracking here because the suffix 
+    changes per file, which would break simple sequential detection. 
+    Instead, we use a counter provided by the loop.
+    """
     os.makedirs(target_folder, exist_ok=True)
-    search_pattern = os.path.join(target_folder, f"{prefix}*{extension}")
-    existing_files = glob.glob(search_pattern)
-    
-    highest_index = 0
-    for file_path in existing_files:
-        filename = os.path.basename(file_path)
-        index_str = filename.replace(prefix, "").replace(extension, "")
-        if index_str.isdigit():
-            highest_index = max(highest_index, int(index_str))
-            
-    next_index = highest_index + 1
-    next_filename = f"{prefix}{next_index:02d}{extension}"
-    return os.path.join(target_folder, next_filename)
+    return os.path.join(target_folder, f"{prefix}{flip_suffix}{extension}")
 
-def generate_psychological_stimulus(number_group, file_prefix):
-    """Renders visual stimuli and saves using the designated prefix."""
-    if len(number_group) != 6:
-        raise ValueError("Fatal Error: Invalid data row detected. Must contain 6 numbers.")
-    
+def generate_psychological_stimulus(number_group, file_path):
+    """Renders visual stimuli and saves to the specifically constructed path."""
     scale_factor = 4 
     canvas_width = 1600
     canvas_height = 800
@@ -59,43 +47,56 @@ def generate_psychological_stimulus(number_group, file_prefix):
     
     for index, (height, width) in enumerate(dimensions):
         center_x = spacing_interval * (index + 1)
-        
         left_bound = center_x - (width // 2)
         right_bound = center_x + (width // 2)
         top_bound = base_y_alignment - height
         bottom_bound = base_y_alignment
         
         draw.rectangle([left_bound, top_bound, right_bound, bottom_bound], fill=(0, 0, 0))
-        
         label_text = str(index + 1)
         draw.text((center_x - 20, base_y_alignment + 30), label_text, fill=(0, 0, 0), font=font)
         
-    output_filepath = get_next_available_filename(TARGET_DIRECTORY, prefix=file_prefix)
-    image.save(output_filepath)
-    print(f"Success: Saved {output_filepath} using parameters {number_group}.")
+    image.save(file_path)
 
 def process_batch(dataset_string, file_prefix, group_name):
-    """Parses a dataset and executes the rendering loop with randomization."""
-    parsed_data_arrays = []
-    for line in dataset_string.strip().split('\n'):
-        if line.strip():
-            parsed_data_arrays.append([int(value) for value in line.split()])
-
-    print(f"\n--- Generating {len(parsed_data_arrays)} images for the {group_name} ---")
+    """
+    Parses a dataset and executes the rendering loop. 
+    Resets the random seed at the start of every batch to ensure 
+    identical flip sequences across groups.
+    """
+    # RESET SEED for synchronization across groups
+    random.seed(42)
     
-    for data_row in parsed_data_arrays:
+    parsed_data_arrays = [
+        [int(value) for value in line.split()] 
+        for line in dataset_string.strip().split('\n') if line.strip()
+    ]
+
+    print(f"\n--- Processing {group_name} ---")
+    
+    for i, data_row in enumerate(parsed_data_arrays):
         active_row = list(data_row)
+        file_index = f"{i+1:02d}" # Create 01, 02, etc.
         
-        # 50% probability swap applied independently per row
+        # 50% probability swap
         if random.random() < 0.5:
+            # Flip Logic (Swap Figure 1 and 3)
             active_row[0], active_row[4] = active_row[4], active_row[0] 
             active_row[1], active_row[5] = active_row[5], active_row[1] 
+            flip_label = "flip1"
+        else:
+            flip_label = "flip0"
         
-        generate_psychological_stimulus(active_row, file_prefix)
+        # Construct filename: e.g., wt_d1_01_flip1.png
+        full_prefix = f"{file_prefix}{file_index}_{flip_label}"
+        save_path = os.path.join(TARGET_DIRECTORY, f"{full_prefix}.png")
+        
+        generate_psychological_stimulus(active_row, save_path)
+        print(f"Saved: {full_prefix}.png")
 
 # --- DATASETS ---
 
-raw_dataset_width_target_decoy_group = """77 41 77 33 41 77
+wt_d1_data = """77 41 77 33 41 77
 77 41 77 32 41 77
 77 46 77 38 46 77
 77 46 77 37 46 77
@@ -114,7 +115,7 @@ raw_dataset_width_target_decoy_group = """77 41 77 33 41 77
 87 51 87 43 51 87
 87 51 87 42 51 87"""
 
-raw_dataset_height_target_decoy_group = """41 77 33 77 77 41
+ht_d1_data = """41 77 33 77 77 41
 41 77 32 77 77 41
 41 82 33 82 82 41
 41 82 32 82 82 41
@@ -133,7 +134,7 @@ raw_dataset_height_target_decoy_group = """41 77 33 77 77 41
 51 87 43 87 87 51
 51 87 42 87 87 51"""
 
-raw_dataset_width_target_none_decoy_group = """77 41 36 33 41 77
+wt_d0_data = """77 41 36 33 41 77
 77 41 36 32 41 77
 77 46 41 38 46 77
 77 46 41 37 46 77
@@ -152,7 +153,7 @@ raw_dataset_width_target_none_decoy_group = """77 41 36 33 41 77
 87 51 46 43 51 87
 87 51 46 42 51 87"""
 
-raw_dataset_height_target_none_decoy_group = """41 77 33 36 77 41
+ht_d0_data = """41 77 33 36 77 41
 41 77 32 36 77 41
 41 82 33 36 82 41
 41 82 32 36 82 41
@@ -171,14 +172,13 @@ raw_dataset_height_target_none_decoy_group = """41 77 33 36 77 41
 51 87 43 46 87 51
 51 87 42 46 87 51"""
 
-# --- EXECUTION TRIGGER ---
+# --- EXECUTION ---
 
-print("=== AUTOMATED STIMULUS GENERATION PROTOCOL ===")
 print(f"Target Directory: {TARGET_DIRECTORY}")
 
-process_batch(raw_dataset_width_target_decoy_group, "wt_d1_", "width_target_decoy_group")
-process_batch(raw_dataset_height_target_decoy_group, "ht_d1_", "height_target_decoy_group")
-process_batch(raw_dataset_width_target_none_decoy_group, "wt_d0_", "width_target_none_decoy_group")
-process_batch(raw_dataset_height_target_none_decoy_group, "ht_d0_", "height_target_none_decoy_group")
+process_batch(wt_d1_data, "wt_d1_", "Width Target Decoy")
+process_batch(ht_d1_data, "ht_d1_", "Height Target Decoy")
+process_batch(wt_d0_data, "wt_d0_", "Width Target None Decoy")
+process_batch(ht_d0_data, "ht_d0_", "Height Target None Decoy")
 
-print("\n=== All batches completed successfully ===")
+print("\n=== Generation Complete. Sequences are synchronized. ===")
