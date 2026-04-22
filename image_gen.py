@@ -3,7 +3,7 @@ import glob
 import random
 from PIL import Image, ImageDraw, ImageFont
 
-# Deterministic execution enforced for reproducibility across both groups
+# Deterministic execution enforced for reproducibility
 random.seed(42)
 
 try:
@@ -74,82 +74,6 @@ def generate_psychological_stimulus(number_group, file_prefix):
     image.save(output_filepath)
     print(f"Success: Saved {output_filepath} using parameters {number_group}.")
 
-# --- DATASETS ---
-
-raw_dataset_dominant = """77 41 77 33 41 77
-77 41 77 32 41 77
-77 46 77 38 46 77
-77 46 77 37 46 77
-77 51 77 43 51 77
-77 51 77 42 51 77
-82 41 82 33 41 82
-82 41 82 32 41 82
-82 46 82 38 46 82
-82 46 82 37 46 82
-82 51 82 43 51 82
-82 51 82 42 51 82
-87 41 87 33 41 87
-87 41 87 32 41 87
-87 46 87 38 46 87
-87 46 87 37 46 87
-87 51 87 43 51 87
-87 51 87 42 51 87
-41 77 33 77 77 41
-41 77 32 77 77 41
-41 82 33 82 82 41
-41 82 32 82 82 41
-41 87 33 87 87 41
-41 87 32 87 87 41
-46 77 38 77 77 46
-46 77 37 77 77 46
-46 82 38 82 82 46
-46 82 37 82 82 46
-46 87 38 87 87 46
-46 87 37 87 87 46
-51 77 43 77 77 51
-51 77 42 77 77 51
-51 82 43 82 82 51
-51 82 42 82 82 51
-51 87 43 87 87 51
-51 87 42 87 87 51"""
-
-raw_dataset_none_dominant = """77 41 36 33 41 77
-77 41 36 32 41 77
-77 46 41 38 46 77
-77 46 41 37 46 77
-77 51 46 43 51 77
-77 51 46 42 51 77
-82 41 36 33 41 82
-82 41 36 32 41 82
-82 46 41 38 46 82
-82 46 41 37 46 82
-82 51 46 43 51 82
-82 51 46 42 51 82
-87 41 36 33 41 87
-87 41 36 32 41 87
-87 46 41 38 46 87
-87 46 41 37 46 87
-87 51 46 43 51 87
-87 51 46 42 51 87
-41 77 33 36 77 41
-41 77 32 36 77 41
-41 82 33 36 82 41
-41 82 32 36 82 41
-41 87 33 36 87 41
-41 87 32 36 87 41
-46 77 38 41 77 46
-46 77 37 41 77 46
-46 82 38 41 82 46
-46 82 37 41 82 46
-46 87 38 41 87 46
-46 87 37 41 87 46
-51 77 43 46 77 51
-51 77 42 46 77 51
-51 82 43 46 82 51
-51 82 42 46 82 51
-51 87 43 46 87 51
-51 87 42 46 87 51"""
-
 def process_batch(dataset_string, file_prefix, group_name):
     """Parses a dataset and executes the rendering loop with randomization."""
     parsed_data_arrays = []
@@ -169,13 +93,92 @@ def process_batch(dataset_string, file_prefix, group_name):
         
         generate_psychological_stimulus(active_row, file_prefix)
 
+# --- DATASETS ---
+
+raw_dataset_width_target_decoy_group = """77 41 77 33 41 77
+77 41 77 32 41 77
+77 46 77 38 46 77
+77 46 77 37 46 77
+77 51 77 43 51 77
+77 51 77 42 51 77
+82 41 82 33 41 82
+82 41 82 32 41 82
+82 46 82 38 46 82
+82 46 82 37 46 82
+82 51 82 43 51 82
+82 51 82 42 51 82
+87 41 87 33 41 87
+87 41 87 32 41 87
+87 46 87 38 46 87
+87 46 87 37 46 87
+87 51 87 43 51 87
+87 51 87 42 51 87"""
+
+raw_dataset_height_target_decoy_group = """41 77 33 77 77 41
+41 77 32 77 77 41
+41 82 33 82 82 41
+41 82 32 82 82 41
+41 87 33 87 87 41
+41 87 32 87 87 41
+46 77 38 77 77 46
+46 77 37 77 77 46
+46 82 38 82 82 46
+46 82 37 82 82 46
+46 87 38 87 87 46
+46 87 37 87 87 46
+51 77 43 77 77 51
+51 77 42 77 77 51
+51 82 43 82 82 51
+51 82 42 82 82 51
+51 87 43 87 87 51
+51 87 42 87 87 51"""
+
+raw_dataset_width_target_none_decoy_group = """77 41 36 33 41 77
+77 41 36 32 41 77
+77 46 41 38 46 77
+77 46 41 37 46 77
+77 51 46 43 51 77
+77 51 46 42 51 77
+82 41 36 33 41 82
+82 41 36 32 41 82
+82 46 41 38 46 82
+82 46 41 37 46 82
+82 51 46 43 51 82
+82 51 46 42 51 82
+87 41 36 33 41 87
+87 41 36 32 41 87
+87 46 41 38 46 87
+87 46 41 37 46 87
+87 51 46 43 51 87
+87 51 46 42 51 87"""
+
+raw_dataset_height_target_none_decoy_group = """41 77 33 36 77 41
+41 77 32 36 77 41
+41 82 33 36 82 41
+41 82 32 36 82 41
+41 87 33 36 87 41
+41 87 32 36 87 41
+46 77 38 41 77 46
+46 77 37 41 77 46
+46 82 38 41 82 46
+46 82 37 41 82 46
+46 87 38 41 87 46
+46 87 37 41 87 46
+51 77 43 46 77 51
+51 77 42 46 77 51
+51 82 43 46 82 51
+51 82 42 46 82 51
+51 87 43 46 87 51
+51 87 42 46 87 51"""
+
 # --- EXECUTION TRIGGER ---
 
 print("=== AUTOMATED STIMULUS GENERATION PROTOCOL ===")
 print(f"Target Directory: {TARGET_DIRECTORY}")
 
-# Execute both batches consecutively
-process_batch(raw_dataset_dominant, "d1_", "dominant group")
-process_batch(raw_dataset_none_dominant, "d0_", "none dominant group")
+process_batch(raw_dataset_width_target_decoy_group, "wt_d1_", "width_target_decoy_group")
+process_batch(raw_dataset_height_target_decoy_group, "ht_d1_", "height_target_decoy_group")
+process_batch(raw_dataset_width_target_none_decoy_group, "wt_d0_", "width_target_none_decoy_group")
+process_batch(raw_dataset_height_target_none_decoy_group, "ht_d0_", "height_target_none_decoy_group")
 
 print("\n=== All batches completed successfully ===")
